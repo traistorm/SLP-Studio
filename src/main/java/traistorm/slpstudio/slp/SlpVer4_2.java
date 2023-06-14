@@ -80,6 +80,7 @@ public class SlpVer4_2 {
     }
     public void loadPalettes()
     {
+        // Load nature Palettes
         File file = new File("E:\\Hust Ondrive\\OneDrive - Hanoi University of Science and Technology\\Documents\\SLP file\\02_nature.pal");
         try {
             Scanner scanner = new Scanner(file);
