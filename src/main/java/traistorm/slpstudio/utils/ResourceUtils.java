@@ -1,17 +1,22 @@
 package traistorm.slpstudio.utils;
 
-import java.io.File;
+import org.apache.commons.io.FileUtils;
+
+import java.io.*;
 import java.net.URL;
 
 public class ResourceUtils {
-    public static File loadFileFromResource(String filename) {
+    public static File loadFileFromPathInResource(String path) throws IOException {
         ClassLoader classLoader = ResourceUtils.class.getClassLoader();
-        URL resourceUrl = classLoader.getResource(filename);
-        if (resourceUrl == null) {
-            throw new IllegalArgumentException("Không tìm thấy tệp trong resource: " + filename);
-        }
 
-        // Tạo đối tượng File từ URL
-        return new File(resourceUrl.getFile());
+        File file = new File(path);
+
+        String parent = file.getParent(); // Lấy phần path (thư mục cha)
+        String filename = file.getName(); // Lấy phần file name (tên tệp)
+        return new File(classLoader.getResource(parent).getPath() + "/" + filename);
+    }
+    public static File loadFileInResource(String filename) throws IOException {
+        ClassLoader classLoader = ResourceUtils.class.getClassLoader();
+        return new File(classLoader.getResource(filename).getFile());
     }
 }

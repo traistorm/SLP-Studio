@@ -5,6 +5,7 @@ import net.jpountz.lz4.LZ4FastDecompressor;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import traistorm.slpstudio.utils.BGRAColor;
+import traistorm.slpstudio.utils.ResourceUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -81,8 +82,8 @@ public class SlpVer4_2 {
     public void loadPalettes()
     {
         // Load nature Palettes
-        File file = new File("E:\\Hust Ondrive\\OneDrive - Hanoi University of Science and Technology\\Documents\\SLP file\\02_nature.pal");
         try {
+            File file = ResourceUtils.loadFileFromPathInResource("Palettes/02_nature.pal");
             Scanner scanner = new Scanner(file);
             int currentLine = 0;
             while (scanner.hasNextLine())
@@ -98,14 +99,14 @@ public class SlpVer4_2 {
                 }
             }
 
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         for (int i = 0; i < 8; i ++)
         {
             playerColorPalette.add(new ArrayList<>());
         }
-        file = new File("E:\\Hust Ondrive\\OneDrive - Hanoi University of Science and Technology\\Documents\\SLP file\\playercolor_blue.pal");
+        File file = new File("E:\\Hust Ondrive\\OneDrive - Hanoi University of Science and Technology\\Documents\\SLP file\\playercolor_blue.pal");
         try {
             Scanner scanner = new Scanner(file);
             int currentLine = 0;

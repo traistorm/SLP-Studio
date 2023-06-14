@@ -51,12 +51,12 @@ public class SlpStudioApplication extends Application {
         //gridPane.add(colorPickerBtn, 0, 0);
 
         // Tải ảnh từ tệp
-        String imagePath = "sky.jpg";
+/*        String imagePath = "sky.jpg";
         Image image = new Image(new FileInputStream(ResourceUtils.loadFileFromResource(imagePath)));
 
         // Lấy chiều rộng và chiều cao của ảnh
         int imageWidth = (int) image.getWidth();
-        int imageHeight = (int) image.getHeight();
+        int imageHeight = (int) image.getHeight();*/
 
         // Duyệt qua từng pixel trong ảnh
         /*for (int y = 0; y < imageHeight; y++) {
