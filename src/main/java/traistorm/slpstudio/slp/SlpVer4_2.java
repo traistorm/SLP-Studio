@@ -8,7 +8,6 @@ import traistorm.slpstudio.utils.BGRAColor;
 import traistorm.slpstudio.utils.ResourceUtils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -18,28 +17,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-public class SlpVer4_2 {
+public class SlpVer4_2 extends Slp {
+    private String version = "Version 4.2";
     List<BGRAColor> unitPalette = new ArrayList<>();
     List<List<BGRAColor>> playerColorPalette = new ArrayList<>();
     int playerColorIndex = 0;
-    enum commandCase
-    {
-        LesserDraw,
-        LesserSkip,
-        GreaterDraw,
-        GreaterSkip,
-        PlayerColorDraw,
-        Fill,
-        FillPlayerColor,
-        ShadowDraw,
-        ExtendedCommands,
-        EOF
-    }
-    public List<Mat> decodeSlp()
-    {
-        try
-        {
-            loadPalettes();
+
+    public List<Mat> decodeSlp() {
+        try {
+            loadPalettes(PALETTE_NATURE_FILENAME);
             File file = new File("E:\\Hust Ondrive\\OneDrive - Hanoi University of Science and Technology\\Documents\\SLP file\\n_all_berry_bush_x1.slp");
 
             List<Mat> frames = extractFramesFromSLP(0, 0, file);
@@ -61,29 +47,12 @@ public class SlpVer4_2 {
         }
         return new String(hexChars);
     }
-    private commandCase getCommandCase(byte[] array, int index)
-    {
-        String s1 = String.format("%8s", Integer.toBinaryString(array[index] & 0xFF)).replace(' ', '0');
-        String command = s1.substring(4, 8);
-        //System.out.println(s1);
-        return switch (command) {
-            case "0000", "1000", "0100", "1100" -> commandCase.LesserDraw;
-            case "0001", "1001", "0101", "1101" -> commandCase.LesserSkip;
-            case "0010" -> commandCase.GreaterDraw;
-            case "0011" -> commandCase.GreaterSkip;
-            case "0110" -> commandCase.PlayerColorDraw;
-            case "0111" -> commandCase.Fill;
-            case "1010" -> commandCase.FillPlayerColor;
-            case "1011" -> commandCase.ShadowDraw;
-            case "1110" -> commandCase.ExtendedCommands;
-            default -> commandCase.EOF;
-        };
-    }
-    public void loadPalettes()
+
+    public void loadPalettes(String filename)
     {
         // Load nature Palettes
         try {
-            File file = ResourceUtils.loadFileFromPathInResource("Palettes/02_nature.pal");
+            File file = ResourceUtils.loadFileFromPathInResource("palettes/" + filename);
             Scanner scanner = new Scanner(file);
             int currentLine = 0;
             while (scanner.hasNextLine())
@@ -101,60 +70,6 @@ public class SlpVer4_2 {
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
-        for (int i = 0; i < 8; i ++)
-        {
-            playerColorPalette.add(new ArrayList<>());
-        }
-        File file = new File("E:\\Hust Ondrive\\OneDrive - Hanoi University of Science and Technology\\Documents\\SLP file\\playercolor_blue.pal");
-        try {
-            Scanner scanner = new Scanner(file);
-            int currentLine = 0;
-            while (scanner.hasNextLine())
-            {
-
-                String data = scanner.nextLine();
-                String[] valueArray = data.split("\\s+");
-                if (valueArray.length == 3)
-                {
-                    BGRAColor bgraColor = new BGRAColor();
-                    bgraColor.takeValue(valueArray);
-                    playerColorPalette.get(0).add(bgraColor);
-                }
-                currentLine += 1;
-                if (currentLine == 132)
-                {
-                    break;
-                }
-            }
-
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-        file = new File("E:\\Hust Ondrive\\OneDrive - Hanoi University of Science and Technology\\Documents\\SLP file\\playercolor_brown.pal");
-        try {
-            Scanner scanner = new Scanner(file);
-            int currentLine = 0;
-            while (scanner.hasNextLine())
-            {
-
-                String data = scanner.nextLine();
-                String[] valueArray = data.split("\\s+");
-                if (valueArray.length == 3)
-                {
-                    BGRAColor bgraColor = new BGRAColor();
-                    bgraColor.takeValue(valueArray);
-                    playerColorPalette.get(1).add(bgraColor);
-                }
-                currentLine += 1;
-                if (currentLine == 132)
-                {
-                    break;
-                }
-            }
-
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
         }
     }
     public List<Mat> extractFramesFromSLP(int frameIndex, int colorIndex, File slpFile)
@@ -295,7 +210,7 @@ public class SlpVer4_2 {
                 //String s1 = String.format("%8s", Integer.toBinaryString(restored[SLPCommandOffsetOfAllFrameList.get(0).get(0).getOffset()] & 0xFF)).replace(' ', '0');
                 //System.out.println(s1); // 10000001
 
-                commandCase commandCaseValue = commandCase.LesserDraw;
+                String commandCaseValue = CommandCase.LesserDraw;
                 Mat frame = new Mat(heightCurrentFrame, widthCurrentFrame, CvType.CV_8UC4);
                 System.out.println(frame.channels());
 
@@ -336,10 +251,10 @@ public class SlpVer4_2 {
 
 
                         //System.out.println(SLPCommandOffsetOfAllFrameList.get(0).get(currentRow + 1).getOffset());
-                        commandCaseValue = getCommandCase(restored, currentIndex);
+                        commandCaseValue = CommandCase.getCommandCase(restored, currentIndex);
                         //System.out.println("Command :" + commandCaseValue);
                         //System.out.println("Row :" + currentRow);
-                        if (commandCaseValue == commandCase.LesserDraw)
+                        if (commandCaseValue == CommandCase.LesserDraw)
                         {
                             //System.out.println(currentIndex);
                             int lengthValue = (restored[currentIndex] & 0xff) >> 2;
@@ -357,7 +272,7 @@ public class SlpVer4_2 {
                             currentIndex += 1;
                             System.out.println("Current col : " + currentCol);
                         }
-                        else if (commandCaseValue == commandCase.LesserSkip)
+                        else if (commandCaseValue == CommandCase.LesserSkip)
                         {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 2;
                             System.out.println(lengthValue);
@@ -368,7 +283,7 @@ public class SlpVer4_2 {
                             }
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == commandCase.GreaterDraw)
+                        else if (commandCaseValue == CommandCase.GreaterDraw)
                         {
                             int lengthValue = (restored[currentIndex] & 0xf0) << 4 + (restored[currentIndex + 1] & 0xff);
                             System.out.println(lengthValue);
@@ -382,7 +297,7 @@ public class SlpVer4_2 {
                         }*/
                             currentIndex += (lengthValue + 1);
                         }
-                        else if (commandCaseValue == commandCase.GreaterSkip)
+                        else if (commandCaseValue == CommandCase.GreaterSkip)
                         {
                             int lengthValue = (restored[currentIndex] & 0xf0) << 4 + (restored[currentIndex + 1] & 0xff);
                             System.out.println(lengthValue);
@@ -393,7 +308,7 @@ public class SlpVer4_2 {
                         }*/
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == commandCase.Fill)
+                        else if (commandCaseValue == CommandCase.Fill)
                         {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 4;
                             if (lengthValue == 0)
@@ -414,7 +329,7 @@ public class SlpVer4_2 {
                             }
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == commandCase.FillPlayerColor)
+                        else if (commandCaseValue == CommandCase.FillPlayerColor)
                         {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 4;
                             if (lengthValue == 0)
@@ -434,7 +349,7 @@ public class SlpVer4_2 {
                             }
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == commandCase.PlayerColorDraw)
+                        else if (commandCaseValue == CommandCase.PlayerColorDraw)
                         {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 4;
                             if (lengthValue == 0)
@@ -454,7 +369,7 @@ public class SlpVer4_2 {
                             }
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == commandCase.ShadowDraw)
+                        else if (commandCaseValue == CommandCase.ShadowDraw)
                         {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 4;
                             if (lengthValue == 0)
@@ -472,7 +387,7 @@ public class SlpVer4_2 {
                         }*/
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == commandCase.EOF)
+                        else if (commandCaseValue == CommandCase.EOF)
                         {
                             System.out.println(("test"));
                             currentIndex += 1;
@@ -504,4 +419,9 @@ public class SlpVer4_2 {
             return null;
         }
     }
+
+    public String getVersion() {
+        return version;
+    }
+
 }

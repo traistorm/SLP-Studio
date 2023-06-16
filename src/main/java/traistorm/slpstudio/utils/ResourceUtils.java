@@ -19,4 +19,6 @@ public class ResourceUtils {
         ClassLoader classLoader = ResourceUtils.class.getClassLoader();
         return new File(classLoader.getResource(filename).getFile());
     }
+    public void test() {
+    }
 }
