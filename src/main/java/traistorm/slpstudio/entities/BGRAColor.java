@@ -1,4 +1,4 @@
-package traistorm.slpstudio.utils;
+package traistorm.slpstudio.entities;
 
 public class BGRAColor {
     Integer blue;

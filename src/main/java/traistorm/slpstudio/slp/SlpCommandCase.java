@@ -1,6 +1,6 @@
 package traistorm.slpstudio.slp;
 
-public class CommandCase {
+public class SlpCommandCase {
     public static String LesserDraw = "LesserDraw";
     public static String LesserSkip = "LesserSkip";
     public static String GreaterDraw = "GreaterDraw";

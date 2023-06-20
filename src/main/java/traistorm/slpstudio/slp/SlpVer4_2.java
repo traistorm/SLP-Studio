@@ -4,7 +4,7 @@ import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FastDecompressor;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import traistorm.slpstudio.utils.BGRAColor;
+import traistorm.slpstudio.entities.BGRAColor;
 import traistorm.slpstudio.utils.ResourceUtils;
 
 import java.io.File;
@@ -19,23 +19,22 @@ import java.util.List;
 import java.util.Scanner;
 public class SlpVer4_2 extends Slp {
     private String version = "Version 4.2";
+    private List<Mat> frames = new ArrayList<>();
     List<BGRAColor> unitPalette = new ArrayList<>();
     List<List<BGRAColor>> playerColorPalette = new ArrayList<>();
     int playerColorIndex = 0;
 
-    public List<Mat> decodeSlp() {
-        try {
-            loadPalettes(PALETTE_NATURE_FILENAME);
-            File file = new File("E:\\Hust Ondrive\\OneDrive - Hanoi University of Science and Technology\\Documents\\SLP file\\n_all_berry_bush_x1.slp");
+    public SlpVer4_2() {
+        loadPalettes(PALETTE_NATURE_FILENAME);
+    }
 
-            List<Mat> frames = extractFramesFromSLP(0, 0, file);
-            return frames;
+    public void decodeSlp(File file) {
+        try {
+            frames = extractFramesFromSLP(0, 0, file);
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
     }
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
     public static String bytesToHex(byte[] bytes) {
@@ -74,8 +73,7 @@ public class SlpVer4_2 extends Slp {
     }
     public List<Mat> extractFramesFromSLP(int frameIndex, int colorIndex, File slpFile)
     {
-        try
-        {
+        try {
             int currentIndex = 0;
             byte[] bytes = Files.readAllBytes(slpFile.toPath());
 
@@ -210,7 +208,7 @@ public class SlpVer4_2 extends Slp {
                 //String s1 = String.format("%8s", Integer.toBinaryString(restored[SLPCommandOffsetOfAllFrameList.get(0).get(0).getOffset()] & 0xFF)).replace(' ', '0');
                 //System.out.println(s1); // 10000001
 
-                String commandCaseValue = CommandCase.LesserDraw;
+                String commandCaseValue = SlpCommandCase.LesserDraw;
                 Mat frame = new Mat(heightCurrentFrame, widthCurrentFrame, CvType.CV_8UC4);
                 System.out.println(frame.channels());
 
@@ -251,10 +249,10 @@ public class SlpVer4_2 extends Slp {
 
 
                         //System.out.println(SLPCommandOffsetOfAllFrameList.get(0).get(currentRow + 1).getOffset());
-                        commandCaseValue = CommandCase.getCommandCase(restored, currentIndex);
+                        commandCaseValue = SlpCommandCase.getCommandCase(restored, currentIndex);
                         //System.out.println("Command :" + commandCaseValue);
                         //System.out.println("Row :" + currentRow);
-                        if (commandCaseValue == CommandCase.LesserDraw)
+                        if (commandCaseValue == SlpCommandCase.LesserDraw)
                         {
                             //System.out.println(currentIndex);
                             int lengthValue = (restored[currentIndex] & 0xff) >> 2;
@@ -272,7 +270,7 @@ public class SlpVer4_2 extends Slp {
                             currentIndex += 1;
                             System.out.println("Current col : " + currentCol);
                         }
-                        else if (commandCaseValue == CommandCase.LesserSkip)
+                        else if (commandCaseValue == SlpCommandCase.LesserSkip)
                         {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 2;
                             System.out.println(lengthValue);
@@ -283,7 +281,7 @@ public class SlpVer4_2 extends Slp {
                             }
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == CommandCase.GreaterDraw)
+                        else if (commandCaseValue == SlpCommandCase.GreaterDraw)
                         {
                             int lengthValue = (restored[currentIndex] & 0xf0) << 4 + (restored[currentIndex + 1] & 0xff);
                             System.out.println(lengthValue);
@@ -297,7 +295,7 @@ public class SlpVer4_2 extends Slp {
                         }*/
                             currentIndex += (lengthValue + 1);
                         }
-                        else if (commandCaseValue == CommandCase.GreaterSkip)
+                        else if (commandCaseValue == SlpCommandCase.GreaterSkip)
                         {
                             int lengthValue = (restored[currentIndex] & 0xf0) << 4 + (restored[currentIndex + 1] & 0xff);
                             System.out.println(lengthValue);
@@ -308,7 +306,7 @@ public class SlpVer4_2 extends Slp {
                         }*/
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == CommandCase.Fill)
+                        else if (commandCaseValue == SlpCommandCase.Fill)
                         {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 4;
                             if (lengthValue == 0)
@@ -329,7 +327,7 @@ public class SlpVer4_2 extends Slp {
                             }
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == CommandCase.FillPlayerColor)
+                        else if (commandCaseValue == SlpCommandCase.FillPlayerColor)
                         {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 4;
                             if (lengthValue == 0)
@@ -349,7 +347,7 @@ public class SlpVer4_2 extends Slp {
                             }
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == CommandCase.PlayerColorDraw)
+                        else if (commandCaseValue == SlpCommandCase.PlayerColorDraw)
                         {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 4;
                             if (lengthValue == 0)
@@ -369,7 +367,7 @@ public class SlpVer4_2 extends Slp {
                             }
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == CommandCase.ShadowDraw)
+                        else if (commandCaseValue == SlpCommandCase.ShadowDraw)
                         {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 4;
                             if (lengthValue == 0)
@@ -387,7 +385,7 @@ public class SlpVer4_2 extends Slp {
                         }*/
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == CommandCase.EOF)
+                        else if (commandCaseValue == SlpCommandCase.EOF)
                         {
                             System.out.println(("test"));
                             currentIndex += 1;
@@ -424,4 +422,11 @@ public class SlpVer4_2 extends Slp {
         return version;
     }
 
+    public List<Mat> getFrames() {
+        return frames;
+    }
+
+    public void setFrames(List<Mat> frames) {
+        this.frames = frames;
+    }
 }

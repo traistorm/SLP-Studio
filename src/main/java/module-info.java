@@ -7,4 +7,6 @@ module traistorm.slpstudio {
                             
     opens traistorm.slpstudio to javafx.fxml;
     exports traistorm.slpstudio;
+    exports traistorm.slpstudio.constant;
+    opens traistorm.slpstudio.constant to javafx.fxml;
 }
