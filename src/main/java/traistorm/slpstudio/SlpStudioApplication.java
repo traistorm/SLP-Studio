@@ -1,28 +1,23 @@
 package traistorm.slpstudio;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import nu.pattern.OpenCV;
+import org.apache.commons.io.FileUtils;
 import org.opencv.core.Mat;
 import traistorm.slpstudio.constant.ApplicationConstant;
 import traistorm.slpstudio.slp.Slp;
@@ -33,6 +28,7 @@ import traistorm.slpstudio.utils.ResourceUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SlpStudioApplication extends Application {
@@ -41,6 +37,7 @@ public class SlpStudioApplication extends Application {
     private String slpVersionDefault = "Version 4.2P";
     private Color colorSelected = Color.WHITE;
     private Image icon;
+    GridPane gridPaneMain = new GridPane();
 
     Slp slp = new Slp();
     File slpFileSelected = null;
@@ -133,13 +130,12 @@ public class SlpStudioApplication extends Application {
         buttonGridPane.setHgap(5);
         buttonGridPane.setVgap(5);
 
-        GridPane gridPane1 = new GridPane();
-        gridPane1.setPadding(new Insets(0, 5, 0, 5));
-        gridPane1.add(buttonGridPane, 0, 0);
+        gridPaneMain.setPadding(new Insets(0, 5, 0, 5));
+        gridPaneMain.add(buttonGridPane, 0, 0);
         //gridPane1.add(scrollPane, 1, 0);
         //gridPane1.add(hBox, 1, 0);
-        gridPane1.setHgap(10); // Khoảng cách giữa các button ngang
-        gridPane1.setVgap(0); // Khoảng cách giữa các button dọc
+        gridPaneMain.setHgap(10); // Khoảng cách giữa các button ngang
+        gridPaneMain.setVgap(0); // Khoảng cách giữa các button dọc
         // Thêm ComboBox vào lưới tại hàng 0, cột 0
         //gridPane1.add(scrollPane, 0, 0);
 
@@ -171,7 +167,7 @@ public class SlpStudioApplication extends Application {
 
         GridPane gridPane2 = new GridPane(); // GridPane chứa Status bar
         gridPane2.add(progressBar, 0, 0);
-        VBox vbox = new VBox(menuBar, gridPane1, gridPane2);
+        VBox vbox = new VBox(menuBar, gridPaneMain, gridPane2);
         vbox.setSpacing(5);
         //vbox.setPadding(new Insets(10, 10, 10, 10));
         Scene scene = new Scene(vbox, ApplicationConstant.WINDOW_WIDTH, ApplicationConstant.WINDOW_HEIGHT);
@@ -192,10 +188,13 @@ public class SlpStudioApplication extends Application {
     private void handleSelectPalettes(String selectedItem) {
         switch (selectedItem) {
             case "Nature" -> {
-                slp.loadPalettes(Slp.PALETTE_NATURE_FILENAME);
+                slp.loadPlayerPalettes(Slp.PALETTE_NATURE_FILENAME);
             }
             case "Player 1" -> {
-                slp.loadPalettes(Slp.PALETTE_PLAYER_1_FILENAME);
+                slp.loadPlayerPalettes(Slp.PALETTE_PLAYER_1_FILENAME);
+            }
+            case "Player 2" -> {
+                slp.loadPlayerPalettes(Slp.PALETTE_PLAYER_2_FILENAME);
             }
             default -> {
 
@@ -239,6 +238,25 @@ public class SlpStudioApplication extends Application {
 
             alert.showAndWait();
             return;
+        } else {
+            slp.decodeSlp(FileUtils.getFile(slpFileSelected));
+            List<Mat> frames = slp.getFrames();
+            List<ImageView> images = new ArrayList<>();
+            VBox vBox = new VBox();
+            for (Mat frame : frames) {
+                ImageView imageView = new ImageView(ImageUtils.openCvMatToJavaFxImage(frame));
+                imageView.setFitWidth(500);
+                imageView.setPreserveRatio(true);
+                // images.add(imageView);
+                vBox.getChildren().add(imageView);
+            }
+            vBox.setPrefSize(400, 400);
+            ScrollPane scrollPane = new ScrollPane();
+            scrollPane.setPrefSize(ApplicationConstant.SHOW_FRAME_WIDTH, ApplicationConstant.PROGRAM_HEIGHT);
+            scrollPane.setContent(vBox);
+            scrollPane.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
+
+            gridPaneMain.add(scrollPane, 1, 0);
         }
         try {
             slp.decodeSlp(slpFileSelected);

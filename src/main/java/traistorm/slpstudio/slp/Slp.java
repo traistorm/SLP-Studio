@@ -13,6 +13,7 @@ public class Slp {
     // DEFINE FILENAME PALETTES
     public static String PALETTE_NATURE_FILENAME = "02_nature.pal";
     public static String PALETTE_PLAYER_1_FILENAME = "playercolor_blue.pal";
+    public static String PALETTE_PLAYER_2_FILENAME = "playercolor_red.pal";
     public Slp() {
     }
     public void decodeSlp(File file) {
@@ -20,7 +21,7 @@ public class Slp {
     public String getVersion() {
         return version;
     }
-    public void loadPalettes(String filename) {
+    public void loadPlayerPalettes(String filename) {
 
     }
 

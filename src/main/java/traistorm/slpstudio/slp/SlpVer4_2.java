@@ -21,11 +21,12 @@ public class SlpVer4_2 extends Slp {
     private String version = "Version 4.2";
     private List<Mat> frames = new ArrayList<>();
     List<BGRAColor> unitPalette = new ArrayList<>();
-    List<List<BGRAColor>> playerColorPalette = new ArrayList<>();
+    List<BGRAColor> playerColorPalette = new ArrayList<>();
     int playerColorIndex = 0;
 
     public SlpVer4_2() {
-        loadPalettes(PALETTE_NATURE_FILENAME);
+        loadUnitPalettes();
+        loadPlayerPalettes(PALETTE_PLAYER_1_FILENAME);
     }
 
     public void decodeSlp(File file) {
@@ -46,26 +47,46 @@ public class SlpVer4_2 extends Slp {
         }
         return new String(hexChars);
     }
-
-    public void loadPalettes(String filename)
-    {
-        // Load nature Palettes
+    public void loadUnitPalettes() {
         try {
-            File file = ResourceUtils.loadFileFromPathInResource("palettes/" + filename);
+            // Load nature Palettes
+            unitPalette = new ArrayList<>();
+            File file = ResourceUtils.loadFileFromPathInResource("palettes/01_units.pal");
             Scanner scanner = new Scanner(file);
             int currentLine = 0;
-            while (scanner.hasNextLine())
-            {
+            while (scanner.hasNextLine()) {
                 currentLine += 1;
                 String data = scanner.nextLine();
                 String[] valueArray = data.split("\\s+");
-                if (valueArray.length == 3)
-                {
+                if (valueArray.length == 3) {
                     BGRAColor bgraColor = new BGRAColor();
                     bgraColor.takeValue(valueArray);
                     unitPalette.add(bgraColor);
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadPlayerPalettes(String filename) {
+        try {
+            // Load nature Palettes
+            playerColorPalette = new ArrayList<>();
+            File file = ResourceUtils.loadFileFromPathInResource("palettes/" + filename);
+            Scanner scanner = new Scanner(file);
+            int currentLine = 0;
+            while (scanner.hasNextLine()) {
+                currentLine += 1;
+                String data = scanner.nextLine();
+                String[] valueArray = data.split("\\s+");
+                if (valueArray.length == 3) {
+                    BGRAColor bgraColor = new BGRAColor();
+                    bgraColor.takeValue(valueArray);
+                    playerColorPalette.add(bgraColor);
+                }
+            }
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -210,10 +231,8 @@ public class SlpVer4_2 extends Slp {
 
                 String commandCaseValue = SlpCommandCase.LesserDraw;
                 Mat frame = new Mat(heightCurrentFrame, widthCurrentFrame, CvType.CV_8UC4);
-                System.out.println(frame.channels());
 
-                for (int i = 0; i < widthCurrentFrame; i++)
-                {
+                for (int i = 0; i < widthCurrentFrame; i++) {
                     for (int j = 0; j < heightCurrentFrame; j++)
                     {
                         frame.put(j, i, 255, 255, 255, 0);
@@ -252,13 +271,10 @@ public class SlpVer4_2 extends Slp {
                         commandCaseValue = SlpCommandCase.getCommandCase(restored, currentIndex);
                         //System.out.println("Command :" + commandCaseValue);
                         //System.out.println("Row :" + currentRow);
-                        if (commandCaseValue == SlpCommandCase.LesserDraw)
-                        {
+                        if (commandCaseValue == SlpCommandCase.LesserDraw) {
                             //System.out.println(currentIndex);
                             int lengthValue = (restored[currentIndex] & 0xff) >> 2;
-                            System.out.println(lengthValue);
                             String s1 = String.format("%8s", Integer.toBinaryString(restored[currentIndex] & 0xFF)).replace(' ', '0');
-                            System.out.println(s1);
                             for (int i = 0; i < lengthValue; i++)
                             {
                                 currentIndex += 1;
@@ -268,12 +284,10 @@ public class SlpVer4_2 extends Slp {
                                 currentCol ++;
                             }
                             currentIndex += 1;
-                            System.out.println("Current col : " + currentCol);
+                            // System.out.println("Current col : " + currentCol);
                         }
-                        else if (commandCaseValue == SlpCommandCase.LesserSkip)
-                        {
+                        else if (commandCaseValue == SlpCommandCase.LesserSkip) {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 2;
-                            System.out.println(lengthValue);
                             for (int i = 0; i < lengthValue; i++)
                             {
                                 frame.put(currentRow, currentCol, 255, 255, 255, 0);
@@ -281,12 +295,9 @@ public class SlpVer4_2 extends Slp {
                             }
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == SlpCommandCase.GreaterDraw)
-                        {
+                        else if (commandCaseValue == SlpCommandCase.GreaterDraw) {
                             int lengthValue = (restored[currentIndex] & 0xf0) << 4 + (restored[currentIndex + 1] & 0xff);
-                            System.out.println(lengthValue);
                             String s1 = String.format("%8s", Integer.toBinaryString(restored[currentIndex] & 0xFF)).replace(' ', '0');
-                            System.out.println(s1);
                         /*for (int i = 0; i < lengthValue; i++)
                         {
                             BGRAColor bgraColor = unit_palette.get(paletteIndex);
@@ -295,10 +306,8 @@ public class SlpVer4_2 extends Slp {
                         }*/
                             currentIndex += (lengthValue + 1);
                         }
-                        else if (commandCaseValue == SlpCommandCase.GreaterSkip)
-                        {
+                        else if (commandCaseValue == SlpCommandCase.GreaterSkip) {
                             int lengthValue = (restored[currentIndex] & 0xf0) << 4 + (restored[currentIndex + 1] & 0xff);
-                            System.out.println(lengthValue);
                         /*for (int i = 0; i < lengthValue; i++)
                         {
                             frame.put(currentRow, currentCol, 255, 255, 255);
@@ -306,76 +315,61 @@ public class SlpVer4_2 extends Slp {
                         }*/
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == SlpCommandCase.Fill)
-                        {
+                        else if (commandCaseValue == SlpCommandCase.Fill) {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 4;
-                            if (lengthValue == 0)
-                            {
+                            if (lengthValue == 0) {
                                 currentIndex += 1;
                                 lengthValue = restored[currentIndex] & 0xff;
                             }
                             //currentIndex += 1;
 
-                            System.out.println(lengthValue);
                             currentIndex += 1;
                             int paletteIndex = restored[currentIndex] & 0xff;
-                            for (int i = 0; i < lengthValue; i++)
-                            {
+                            for (int i = 0; i < lengthValue; i++) {
                                 BGRAColor bgraColor = unitPalette.get(paletteIndex);
                                 frame.put(currentRow, currentCol, bgraColor.getBlue(), bgraColor.getGreen(), bgraColor.getRed(), 255);
                                 currentCol ++;
                             }
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == SlpCommandCase.FillPlayerColor)
-                        {
+                        else if (commandCaseValue == SlpCommandCase.FillPlayerColor) {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 4;
-                            if (lengthValue == 0)
-                            {
+                            if (lengthValue == 0) {
                                 currentIndex += 1;
                                 lengthValue = restored[currentIndex] & 0xff;
                             }
-                            System.out.println(lengthValue);
 
                             currentIndex += 1;
                             int paletteIndex = restored[currentIndex] & 0xff;
-                            for (int i = 0; i < lengthValue; i++)
-                            {
-                                BGRAColor bgraColor = playerColorPalette.get(playerColorIndex).get(paletteIndex);
+                            for (int i = 0; i < lengthValue; i++) {
+                                BGRAColor bgraColor = playerColorPalette.get(paletteIndex);
                                 frame.put(currentRow, currentCol, bgraColor.getBlue(), bgraColor.getGreen(), bgraColor.getRed(), 255);
                                 currentCol ++;
                             }
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == SlpCommandCase.PlayerColorDraw)
-                        {
+                        else if (commandCaseValue == SlpCommandCase.PlayerColorDraw) {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 4;
-                            if (lengthValue == 0)
-                            {
+                            if (lengthValue == 0) {
                                 currentIndex += 1;
                                 lengthValue = restored[currentIndex] & 0xff;
                             }
-                            System.out.println(lengthValue);
 
-                            for (int i = 0; i < lengthValue; i++)
-                            {
+                            for (int i = 0; i < lengthValue; i++) {
                                 currentIndex += 1;
                                 int paletteIndex = restored[currentIndex] & 0xff;
-                                BGRAColor bgraColor = playerColorPalette.get(playerColorIndex).get(paletteIndex);
+                                BGRAColor bgraColor = playerColorPalette.get(paletteIndex);
                                 frame.put(currentRow, currentCol, bgraColor.getBlue(), bgraColor.getGreen(), bgraColor.getRed(), 255);
                                 currentCol ++;
                             }
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == SlpCommandCase.ShadowDraw)
-                        {
+                        else if (commandCaseValue == SlpCommandCase.ShadowDraw) {
                             int lengthValue = (restored[currentIndex] & 0xff) >> 4;
-                            if (lengthValue == 0)
-                            {
+                            if (lengthValue == 0) {
                                 currentIndex += 1;
                                 lengthValue = restored[currentIndex] & 0xff;
                             }
-                            System.out.println(lengthValue);
 
                         /*for (int i = 0; i < lengthValue; i++)
                         {
@@ -385,21 +379,16 @@ public class SlpVer4_2 extends Slp {
                         }*/
                             currentIndex += 1;
                         }
-                        else if (commandCaseValue == SlpCommandCase.EOF)
-                        {
-                            System.out.println(("test"));
+                        else if (commandCaseValue == SlpCommandCase.EOF) {
                             currentIndex += 1;
                             numberEOF ++;
                             currentRow ++;
                             currentCol = 0;
                             break;
                         }
-                        else
-                        {
+                        else {
                             currentIndex += 1;
                         }
-
-
                     }
                     //System.out.println(numberEOF);
                 }
@@ -411,8 +400,7 @@ public class SlpVer4_2 extends Slp {
 
             return frames;
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             e.printStackTrace();
             return null;
         }
